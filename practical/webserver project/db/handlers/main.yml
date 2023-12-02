@@ -1,0 +1,6 @@
+---
+# handlers file for apache
+- name: start db
+  service:
+    name: "{{ db_engine }}"
+    state: started

@@ -1,0 +1,66 @@
+- akbr community la ansible 3la redhat 
+- ansible msh by7tag agent (msh fahmha awy )
+- msh bytrack el current state (ya3ni lw ra7 rma configuration 3la machines w 3amlt run tany hayrw7 
+   yarmy nafs el configuration tany msh ha track an already el configuration mwgwda )
+
+    ---> hwa 2al momken a5leha targ3li el configuration bs one time use 
+
+- Ansible Architecture  
+    ---> ansible server (ansible libraraies )+ execute cmds + user connect on it 
+    ---> ansible clients (recieve configuration)
+    
+    ---> server by ssh 3la clients w yanzl 3lehm configuration 
+
+
+- Ansible agentless it is opensource 
+
+- Ansible playbook 
+
+- hanzl python-3  --- > 3shan anzl ansible hast5dm pip (package manager written in python ) 3shan klda hanzl python el awl 
+
+- tasks batt7t fy playbook ( baynafz by order "sequential") (tasks == plays )
+
+- inventory --> sheet mwgwd feh kol ips el clients  w asma2 w el passwords (pass this )
+             --> momken 2a2sm el file la aktr mn group 
+                     ---> group used with ad hoc commands (mkan el hostname )
+                     ----> used inside playbook 
+
+              ---> when download ansible it creates by default /etc/ansible 
+              ---> momken a3'yr mkan el inventory file mn ansible configuration 
+              momken a pass mkan el inventory file fy addhoc cmd (- i) 
+
+- ----------------------
+to make code resuasable---> ha2sm el playbook la magmw3a mn el bundle (codes , tasks , ...) --
+--> roles --->  hya asma2 el files el 2asmtha (refer for role inside playbook )    shabh el modules , momken aktr mn playbook yast5dm nafs el role 
+
+- lw 7tat playbook 3la githup 
+
+defaults --- > haya5od values for  variables  lw mafesh values vars  
+vars -----> dh pass feh values lel variables 
+
+
+template ---> jinja template (7:04) 
+            hwa nafs  same as file but with variables 
+            example ely 2alo ---> file with dynamic variables byt3mlo copy mn src lel clients w 2a2dr 23'ir el variables mn ay mkan fy el role 
+
+
+generate key pair 
+---> public key on client 
+---> private key 3ndi 
+
+inside adhok --password=
+
+
+
+ansible galaxy --- > repo introduced by ansible (3shan ana 2a2dr aft7 el gui ansible galaxy btas3 license )
+               ---> ana 3wdt el repo deh --> any 3amlt repo w ast5dmt el cmd ansible-galaxy 
+
+
+Ansible tower ---> 
+
+
+
+
+
+
+#------------------------------------------------------------------------------------

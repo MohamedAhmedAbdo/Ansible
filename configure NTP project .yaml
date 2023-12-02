@@ -1,0 +1,155 @@
+> how to configure Ntp 
+
+1 - Install the NTP package
+2 - Configure the NTP server to use "ntp.example.com" to “server 0.africa.pool.ntp.org'”
+       # pass chrony.conf dh feh kol el configuration 
+3 - Start the NTP service and enable it to start at boot time
+4 - Set the timezone to "America/New_York" or “Africa/Cairo”
+    Note :You can replace "ntp.example.com" with the NTP server of your choice.
+
+
+
+> project hireachy 
+---------------------
+- project directory  -> inventories / inventory
+                     -> roles /Ansible-Apache-Role /{tasks,handlers,defaults,vars,templates}
+                     -> playbook.yml
+                     -> chrony.conf
+                     
+
+
+# playbook.yml
+    - name: Configure NTP on Linux servers
+      hosts: client
+      become: yes
+      roles:
+        - Ansible-Apache-Role
+
+# role/tasks/main.yml 
+    - name: be sure ntp is installed
+      yum:
+        name: chrony
+        state: present
+      tags: ntp
+    - name: be sure ntp is configured
+      template:
+        src: chrony.conf
+        dest: /etc/chrony.conf
+      notify:
+        - restart ntpd
+      tags: ntp
+    - name: be sure ntpd is running and enabled
+      service:
+        name: chronyd
+        state: started
+        enabled: yes
+      tags: ntp
+    - name: Set Timezone
+      community.general.timezone:
+      name: Africa/Cairo
+
+# role/handlers/main.yml 
+    - name: restart ntpd
+      service:
+        name: chronyd
+        state: restarted
+
+
+# chrony.conf
+    server 192.168.0.1 iburst
+    server 192.168.0.2 iburst
+    stratumweight 0
+    driftfile /var/lib/chrony/drift
+    rtcsync
+    makestep 10 3
+    bindcmdaddress 127.0.0.1
+    bindcmdaddress ::1
+    keyfile /etc/chrony.keys
+    commandkey 1
+    generatecommandkey
+    noclientlog
+    logchange 0.5
+    logdir /var/log/chrony
+
+# role/templates/main.yml 
+    - name: be sure ntp is configured
+      template:
+        src: chrony.conf
+        dest: /etc/chrony.conf
+      notify:
+        - restart ntpd
+      tags: ntp
+
+# msh 3arf dina 3ayda nafs module el template marten (mara fy template/main.yml , tasks/main.yml)
+
+################################################################################################################################################################33333
+
+> if we use roles using Ansible Galaxy :
+----------------------------------------------
+- project directory  -> inventories /inventory-file 
+                     -> roles /requirements.yml
+                     -> playbook.yml
+                     -> chrony.conf 
+
+- NtP repo ------> Ansible-NTP-Role   # this name used inside playbook 
+                      -> {tasks,handlers,defaults,vars,templates,meta}
+
+# requirements.yml
+    roles:
+      - src: https://github.com/DinaSol/Ansible-NTP-Role
+        scm: git
+        version: master
+
+
+# meta/main.yml
+    dependencies: []
+
+    galaxy_info:
+      author: Dina Elhelw
+      description: NTP Role.
+      galaxy_tags:
+        - ntp
+      role_name: ntp_config      # ely fahmto msh banst5dmo fy 7aga 
+
+# ana msh fahm eh lazmt tags deh 
+# lazm el file (meta/main.yml ) yakon mwgwd fy repo lw 3ayz 7ad yast5dm ansible galaxy w yst5dmha 
+
+
+#############################################################################################################
+questions :
+# ana msh fahm eh lazmt tags (mwgwda fy el metadata w fy module ) & some modules 
+----
+#   role_name: ntp_config --->   fy meta bta3t el role --->  ely fahmto msh banst5dmo fy 7aga s7 kda ?? 
+----
+# msh 3arf dina 3ayda nafs module el template marten (mara fy template/main.yml , tasks/main.yml)
+----
+# ay shar7 lel chrony.conf file aw el gwz2 el mwhm feh 
+----
+# nourhan 3amla 7aga 3'reba --> 3amla folder role/ {meta, tasks} --> el meta gwaha metadata bta3t mina , w tasks feha install , set timezone 
+                               # msh fahm b2a fen el server el hya ha authenticate m3ah 
+
+##########################################################################################################################
+> another module used with centos 
+-----------------------------------
+
+- name: Configure NTP
+  lineinfile:
+    path: /etc/ntp.conf
+    regexp: '^server'
+    line: 'server ntp.example.com'
+  notify: restart ntpd
+- name: Start NTP service
+  service:
+    name: ntpd
+    state: started
+    enabled: yes
+- name: Set Timezone
+  timezone:
+    name: America/New_York
+    state: present
+
+1 - Install the NTP package
+2 - Configure the NTP server to use "ntp.example.com" to “server 0.africa.pool.ntp.org'”
+3 - Start the NTP service and enable it to start at boot time
+4 - Set the timezone to "America/New_York" or “Africa/Cairo”
+    Note :You can replace "ntp.example.com" with the NTP server of your choice.

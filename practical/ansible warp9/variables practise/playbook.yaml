@@ -1,0 +1,15 @@
+- hosts: localhost
+  vars:
+    value: first variable
+    courses:
+      - ansible
+      - terraform
+      - docker
+
+  tasks:
+    - name: dispaly message
+      debug:
+        msg: "{{value}}" #jinja2 template format
+    - name: dispaly courses
+      debug:
+        msg: "{{courses [0]}} {{courses [1]}} {{courses [2]}}"

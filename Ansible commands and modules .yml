@@ -1,0 +1,271 @@
+>ssh configuration 
+-------------------
+----> ubuntu :
+      (3shan a connect 3la aktr mn server bnafs private key)
+      1- generate keypair on any machine 
+      2- copy public key and paste it on other machines "~/.ssh/authorized_keys"
+          under specific user home  (hwa dh el user ely hast5dmo w ana ba3ml ssh)
+    
+        ~/.ssh/authorized_keys ----> public key # hwa kan bayshr7 3la EC2 ubuntu (I think an el klam dh m3 ay ubuntu machine msh shart EC2 AWS)
+                                                # default user of ubuntu server machine on AWs is "ubuntu"
+
+     - ssh configuration batkon per user (public w private key mwgwden ta7t /home /user )
+
+        example : 3ayz a3ml user ma5sws lel ansible yast5dmo w hwa bay ssh 3la ubuntu machine  on aws        
+        # sudo useradd ansible 
+        # sudo passwd ansible 
+        # mkdir ansible ------> make home folder for ansible user (under /home)
+        # chown ansible:ansible ansible/
+        # sudo su ansible -----> byd5lo terminal kda yanfz feha cmds (ka2ny da5lt gwa container ($...))
+        #   bash ---> hay5leh (ansible@IP:~$)
+        #   mkdir .ssh
+        #   vim authorized_keys --> paste public key 
+        #   exit 
+        
+        on master 
+        # ssh -i ansible.pem ansible@IP ---> b3d ma 3amlt user w 7tat gwa el home bta3o el public key 
+---------------------------------------------
+----> centos 
+On the master do:
+▪ ssh-keygen
+▪ ssh-copy-id -i /root/.ssh/id_rsa.pub user@ip
+
+if already obtained a key from cloud or anywhere else then it is important to do this
+▪ chmod 400 key-file
+
+################################################################################################################################
+> ad-hoc commands:
+-------------------
+general form :
+- ansible [pattern] -m [module] -a "[module options]" 
+                    
+# example :- 
+- ansible Webserver1 -m ping -k     , ansible -m ping webservers --private-key=/etc/ansible/client.pem   # -k ---> haytlop mn el user password bta3 el host
+- ansible Webserver1 -m setup -k
+- ansible Webserver1 -m reboot -k   , ansible -m reboot webservers –become  --private-key=/etc/ansible/client.pem
+
+- ansible <group_name> -m gather_facts
+
+# playbook :-
+ansible-playbook -i [inventoryfile] --private-key [key.pem] [playbookfile]
+
+# Galaxy 
+ansible-galaxy install [Role-name]   # bta5od el cmd dh copy from ansible Galaxy 
+ansible-galaxy init [Role-name]       # create role directory bnafs asm (role name ) , fy nafs el mkan el run feh el command  w gwah el structure kaml 
+
+ansible-galaxy install --roles-path <path-where-to-install> -r requirements.yaml
+ansible-galaxy collection install <collection-name>  # bta5od el cmd dh copy from ansible Galaxy 
+ ansible-galaxy collection install -p <path-where-to-install> -r requirements.yaml
+
+# vault :- 
+
+ ansible-vault encrypt <file name>  , # ansible-vault create <file name> , ansible-vault edit <file name>
+ ansible-vault view <file name>       # view encrybted content of file 
+ ansible-vault decrypt <file name>
+ ansible-vault rekey <file name>
+
+ ansible-playbook myplaybook.yml --ask-vault-pass  # enter password 
+
+####################################################################################################################
+> Ansible Playbooks example :
+----------------------
+present --> install 
+absent --> remove 
+latest --> check if latest version of this package installed or no 
+
+# lw l2at fy el documentation asm el module maktwb kda (ansible.builtin.file)  msh lazm aktb ansible.builtin ---> dh bs bay3rfni ano builtin in module tab3 ansible nafsaha 
+# fy el documentation bat3rf el arguments w required or not ---> table 
+
+--------------------------------------------------------------------------------------------------------
+> ubuntu
+--------- 
+- hosts: web
+  remote user: ubuntu                      # dh lw ana msh ma7dd asm el user el hayconnect beh fy el inventory file 
+  become: yes
+  vars:
+    - dir_name: test 
+  vars_prompt:
+    - name: password
+      prompt: plz enter ur password
+      private: yes 
+
+  tasks:
+    - name: apt update
+      apt:
+        update_cache: yes                   # sudo apt update 
+    - name: install apache
+      apt:
+        name: apache2  , nginx              # apache2 ==httpd in centos 
+        state: present
+
+    - name: create dir
+      file:
+        path: "{{ dir_name }}"
+        state: directory
+
+    - name:
+      command: "ls test"   
+      register: results 
+
+    - name: print stdout
+      debug:
+        var: results.stdout     
+
+    
+    - name: copy template
+      template:
+        src: myconfq 
+        dest: myconfig     
+
+    - name: create user x
+      user:
+        name: "x"
+        state: present   
+    
+    - name: create user 
+      user:
+        name: "{{ item }}"
+        state: present 
+      with_items:
+        - mohamed
+        - mostafa 
+        - ali 
+       
+
+
+####################################################################################################33333
+>>>> modules 
+###############
+> apt (debian) , yum (redhat) 
+    - to install ->  apache (apache2 ==httpd) , ngninx , firewalld , ntp
+
+  - name: install httpd
+    yum:
+      name: httpd , nginx , firewalld , ntp 
+      state: installed , present
+
+ 
+> systemd == service 
+
+   - name: start and enable httpd
+     systemd:
+      name: httpd , firewalld
+        state: started , reloaded
+        enabled: yes
+
+   - name: restart httpd
+     service: 
+        name: httpd , nginx
+        state: restarted , started
+        
+        # where reload == restarted 
+
+> firewalld
+
+  - name: permit traffic in default zone for https service
+    firewalld:
+      port: 80/tcp
+      permanent: yes
+      state: enabled
+
+    # u need to reload (firewalld service) using systemd module  after any change in its rules 
+
+> ntp 
+  redhat steps 
+  --------------
+1 - Install the NTP package
+2 - Configure the NTP server to use "ntp.example.com" to “server 0.africa.pool.ntp.org'”
+3 - Start the NTP service and enable it to start at boot time
+4 - Set the timezone to "America/New_York" or “Africa/Cairo”
+    Note :You can replace "ntp.example.com" with the NTP server of your choice.
+
+
+
+
+
+ > copy 
+
+    - name: copy index.html file to the managed host
+      copy:
+        src: index.html
+        dest: /var/www/html/index.html
+
+> file 
+    ----> create file or directory , change permission  
+   - name: creates  files
+     file:
+       path: /tmp/ansible-{{ item }}
+       state: touch 
+
+    - name: create dir
+      file:
+        path: "{{ dir_name }}"
+        state: directory
+
+
+> command 
+    -> not based on module not based on Idempotent concept , used for checking      
+    -> el o/p msh bayzhr w hwa ba run playbook  
+  
+  - name: 
+    command: 'sudo /sbin/shutdown -t now'  
+    command: 'sudo /sbin/reboot'
+    command: "ls test"                     # hashwf el o/p fy run time 
+
+
+
+
+> debug 
+
+> template 
+
+  - template :
+      src: /mytemplates/foo.j2
+      dest: /etc/file.conf
+      owner: bin
+      group: wheel
+      mode: u=rw,g=r,o=r # 0640
+      setype: named_conf_t
+      validate: /usr/sbin/sshd -t -f %s
+      backup: yes
+
+> user 
+
+  - name : create new user 
+    user:
+      name: 
+      uid: 
+      state: present 
+
+
+> stat 
+   chech if file exist 
+  - name: Check if file exists
+    stat:
+      path: /tmp/file.txt
+    register: file_exists
+
+  - name: Fail if file does not exist
+    fail:
+      msg: "File not found"
+    when: not file_exists.stat.exists
+
+###################################################################################################33
+> udemy-project :
+----------------
+- Nexus :  it is artifact repositery , used to store (dockerfile , jar file , zip files )
+           meztha anha "self hosting " ---> msh public zy el githup , more secure
+
+ # deh task bta3t el udemy course 
+
+################################################################################################
+general attributes 
+-------------------
+  become_method: sudo
+  become_password: iti1
+
+
+
+###################################################################################################################################33
+# eh el far2 ben el variables fy el defaults w vars ???
+------

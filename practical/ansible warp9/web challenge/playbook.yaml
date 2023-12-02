@@ -1,0 +1,34 @@
+- hosts: itlappsrv
+  become: yes
+  remote_user: root
+  tasks:
+    - name: update all packages
+      yum:
+        name: "*"
+        state: latest
+
+    - name: install apache
+      yum:
+        name: httpd
+        state: installed
+
+    - name: create html
+      shell: # normal executable is /bin/sh
+        cmd: echo "Hello from Ansible" > /var/www/html/index.html
+        args: # we add this part becaue the shell module not support some functionality as redirection
+          executable: /bin/bash
+      notify: restart apache
+
+    # - name: get the server public IP
+    #   shell:
+    #     cmd: curl http://169.254.169.254/latest//meta-data/public-ipv4
+    #   register: publicIP
+
+    # - debug:
+    #   var: publicIP.stdout
+
+  handlers:
+    - name: restart apache
+      service:
+        name: httpd
+        state: reloaded

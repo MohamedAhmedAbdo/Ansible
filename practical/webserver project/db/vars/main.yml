@@ -1,0 +1,3 @@
+---
+# vars file for apache
+db_engine: mysql

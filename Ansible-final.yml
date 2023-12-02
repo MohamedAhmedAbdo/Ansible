@@ -1,0 +1,507 @@
+> General 
+----------
+Ansible builtin parameter , module parameter
+what is Ansible :
+- it is opensource , agentless  configuration management tool 
+
+why Ansible :
+- No agent 
+- Idempotent ---> Ansible structured on idempotency concept , bm3na an hwa 3arf an el code bywsf state fa lw server already wasl lel state deh msh bay3edha (nafs fakrt terraform ) 
+- Declaritive not procedural ---> nafs fakrt idempotency 
+    msh baynfz steps wara b3dha ka3no script ,  Ansible works by you writing a description of the
+    state of the machine that you want and then it takes steps to fulfill that description.
+
+- easy to learn it 
+
+How Ansible Works :
+- Architecture 
+  master (where Ansible is downloaded)
+  client (master apply configuration on them )
+
+- Ansible is agentless (Doesn't need Agent on client) ,
+  because it connect on client using ssh using (username and password) or (username and keypair) 
+ - key pair ----> (generate key pair on clients ---> keep private key on client side & import their public key on master  )
+ 
+ - ssh configuration batkon per user (public w private key mwgwden ta7t /home /user )
+   
+installing Ansible  :
+- ansible hwa python package 
+  m7tag tanzl python el awl w b3dha anzl ansible 
+
+##################################################################################################################################################
+> concepts 
+------------
+- Ansible msh bay3ml tracking lel clients ---> lw execute la playbook 100 mara kol mara hayrw7 yarmy nafs el configuration
+                                               # masln ba copy file mn master la target host --> each time it copy file and overwrite it on host however it changed or not 
+
+                                          ---> compare current state of hosts with desired state (in playbook file ) --> return results to me (ok , changed ,..)
+                                              ---> bay3ml comparing 3n tare2 ano bay3ml fy el awl process asmaha "gathering facts" 
+                                              # Ansible facts are data gathered about target nodes (host nodes to be configured) 
+                                              #    and returned back to controller nodes. Ansible facts are stored in JSON format
+                                              # fy 5atwt el gathering facts --> master collect some info about client w ya7thm fy (object gwah key w value )
+
+- lw 7sl moshkla fy host w hwa bynfz by skip el module dh w ya2wli fy el 2a5r 
+
+Inventory File : 
+-----------------                                
+- by default this file written with INI language , it contain many sections 
+  it can also written in yaml syntax 
+
+- it exist by default (/etc/ansible/hosts) , contain all default sections "commented"
+- you can define your own inventory file per project and refer to it when applying cmd using (-i)
+  if u need default one no need to refer to it 
+
+- main purpose to define which server you want to be managed [mandatory] " it is the only mandatory thing in that file "
+  
+  
+  1 -  define a section "any name" (this section refer to a group of clients ) 
+    ex.
+      [webservers]
+      Webserver1 ansible_host=192.168.66.189 ansible_user=cloud ansible_ssh_private_key_file=/etc/ansible/key.pem 
+
+      # where 
+      # webservers ---> group_name 
+      # Webserver1 ---> name of client (it is defined by me to refer to this client in ad-hoc command , Ansible Playbooks) (it can be any name)
+      # ansible_host -> host_IP
+      # ansible_user -> user of client 
+      # ansible_ssh_private_key_file ---> path of key on master side used to connect on that client 
+      # ansible_port=<port>
+      
+      # ansible_host , ansible_user , ansible_ssh_private_key_file ---> Ansible pre-defined variables (must written in that syntax)
+    
+    ex. 
+      [webservers]
+        192.168.66.189
+      # u should ---> pass private key w ana ba run el asnible-playbook 
+      #          ---> use (remote_user:) asm el user el hay connect beh 
+
+
+      [webservers:vars]
+      http_port=80/tcp
+      html_page_src=index.html
+      html_page_dest=/var/www/html/index.html
+
+  
+
+
+variables :
+-----------
+A) Ansible pre-defined variables ---> created by ansible , and we use it with the correct variable_name (variables inside inventory file)
+   # shabh private key 
+B) user-defiend variables ----------> created by user and used inside playbook file  
+                          ----------> it might be defined inside (inventory file) under (atlanta) section
+                                      it might be defiend inside (playbook file)
+   
+    1- inventory file :
+       - this method is used if you want to assign variables to (single host ) or group 
+         for example ---> host have a unique value like non-standard http port
+         
+        a) inventory file (INI) 
+         --------------------
+           [atlanta]
+           hostl http_port=80 maxRequestsperChild=808
+           host2 http_port=303 maxRequestsperChild=909
+
+        b) inventory file (yaml) 
+         ---------------------
+          atlanta :
+            hosts :
+              host1:
+                http_port: 80
+                maxRequestsperChi1d: 808
+              host2 :
+                http_port: 303
+                maxRequestsperchi1d: 909
+
+        # if the two host have same value for that variable 
+          atlanta :
+            hosts :
+              host1:
+              host2 :
+                http_port: 303
+                maxRequestsperchi1d: 909
+
+      
+      2- playbook file :
+
+
+#################################################################################################################################################
+> ad-hoc commands:
+---------------------
+- https://docs.ansible.com/ansible/latest/command_guide/intro_adhoc.html
+
+- used for a one-time task. (not reusable)(I can't do many sequentials tasks using ad-hoc commands )
+
+- to run single cmd on one host or group of hosts or all clients 
+  or used to call a module directly from the command line.
+
+general form :
+ansible [pattern] -m [module] -a "[module options]"
+  # where [pattern] ---> refers to client_name or group_name (given by me in inventory) or Ip
+  # The -a ---> arguments of module ,  either through the "key=value" syntax or a JSON string starting with { and ending with } for more complex option structure
+  # [module] & "[module options] ---> search on them from documentation as per my need 
+
+Use cases for ad hoc tasks:
+Rebooting servers
+Managing files , services , packages 
+Managing users and groups
+Gathering facts
+
+###########################################################################################################################################
+> Ansible Playbooks :
+----------------------
+- must be written in yaml syntax 
+
+# summary 
+# • Playbook contains Plays.
+# • Plays contain tasks.
+# • tasks call modules.
+
+- Containing 1 or more plays and is used to define the desired state of a system.
+- Plays consist of an ordered set of tasks to execute against host selections from your Ansible inventory file.
+- Ansible includes a "check mode" which allows you to validate playbooks
+  ----> return (ok , changed , unreachable , failed , skipped , rescused , ignored ) "7"
+
+- kol play ban3rf gwaha el hosts el hy apply 3lehm el play 
+- momken yakon gwah aktr mn play (each play target a specific host or specific group )
+
+task : 
+- Each task executes a module with specific arguments.
+- momken el task el wa7d yanfz aktr mn module 
+- el tasks battnfz sequential lw 7asl moshkla fy host ba skip el host w ya2wli fy el 2a5r 
+
+
+module :
+- there are more than 1000 module provided by ansible 
+-  modules written with scripting language (python, perl, ruby , bash)
+- One of the guiding properties of modules is idempotency, which means
+  that even if an operation is repeated multiple times, it will always place
+  the system into the same state.
+  # msh kol el modules maktwba ba mabd2 idempotency ---> 3shan kda 7awl tast5dm modules mw3tmda 3la el idempotency (bat3rf el arguments mn documentation ) 
+  # ex. command module ---> execute command , not based on idempotency
+
+> general form of playbook :
+-------------------------
+- name :                    # name of 1st play (not mandatory field if u removed it u must put "-" at hosts)
+  hosts:                    # name of target user or group as defiend on inventory file 
+  become: yes               # used to give master "root access" on clients (not mandatory field , but commonly used)
+  vars:                     # we declare variable in that section which used inside module 
+                            
+  tasks:                    # under that section we defiend many modules with thier attributes , give each module a decriptive name 
+  - name:                   # give module descriptive name (any name) , (not mandatory field if u removed it u must put "-" at module_name)
+    module_name_1:          # module name same as it in documentation 
+      attributes            # each module has its attribute (given in documentation)
+  - name:
+    module_name_2:          # 2nd module 
+
+- name:                     # 2nd play 
+  ........
+
+
+# example 
+- name : Enable firewall
+- hosts: webservers
+  become: yes
+  vars:
+    http_port: 80/tcp
+  tasks:
+  - name: permit traffic in default zone for https service
+    firewalld:
+      port: "{{ http_port }}"
+      permanent: yes
+      state: enabled
+
+
+------------------------------------------------------------------------------------------
+> handler 
+----------
+- it is special task (written in the end of play ),(executed at the end of play) , batb2a mwrtbta ba another task
+- executed if only it triggired by another module using (notify) attribute
+- baytkatb fy section mwnfsl zy el tasks    
+- usecase leha (webservers "apache , nginx") , copy , template , firewall configuration 
+-  executed at the end of play after all regular tasks have been executed 
+
+    # example
+      tasks:
+      - name: httpd package is present
+        yum:
+          name: httpd
+          state: latest
+          # notify: restart httpd  # hwa dh el hayrbwt el task deh bal handler , w lazm yakon bnafs asm el handler ----> mkano hana 3'alt 
+
+      - name: latest index.html file is present
+        copy:
+          src: fileshndex.html
+          dest: /var/www/html/
+          notify: restart httpd  # hwa dh el hayrbwt el task deh bal handler , w lazm yakon bnafs asm el handler
+      handlers:    
+      - name: restart httpd
+        service: 
+          name: httpd , nginx
+          state: restarted
+
+
+    # example 
+        # If a configuration file gets changed notify a service restart task that it needs to run.
+  # handlers used with web servers (nginx , apache) bec. when html file changed it need to restart webserver 
+> loops
+--------
+- it is a builtin loop contruct in ansible 
+- used to repeat task many times 
+- defiend under specific module (same level of module not under it )
+- it loops over a simple list  (we refer to this element using "item") # (it might be more complex )
+  it loop over elements in list (feha aktr mn element gwa kol element "key,value") (refer to it using item.1stkey)
+- we can use "loop" or "with_items" ---> both are key words to make loop , we refer to element using "item "
+
+   # example (with_items)
+   - name: create user 
+      user:
+        name: "{{ item }}"
+        state: present 
+      with_items:
+        - mohamed
+        - mostafa 
+        - ali 
+       
+   
+   
+   
+   # example (single value list)
+   - hosts: all
+     tasks:
+     - name: creates users files
+       file:
+         path: /tmp/ansible-{{ item }}
+         state: touch
+       loop:
+         - sammy
+         - erika
+         - brian
+
+
+    # example (list consists of many key pair values)
+  - hosts: ubuntu "Oserver
+    become: yes
+    tasks:
+    - name: Create new users
+      user:
+        name: '{{item.name}}'
+        uid: '{{item.uid}}'
+        state: present
+
+      loop:
+        - name: mohamed
+          uid: 1020
+        - name: abdo
+          uid: 1030
+        - name: omar
+          uid: 1040
+       
+
+
+> condtition
+-------------
+- execute different tasks depending on {the value of a fact (data about the remote system), a variable, or the result of a previous task.}
+  lw el condition at72a2 ynafz el task , lw mat72a2sh ya skip el task 
+
+-  fy 5atwt el gathering facts --> master collect some info about client w ya7thm fy (object gwah key w value )
+   ex. ansible_facts ---> object , os_family --> key 
+
+- when isn't a module parameter (msh bayt7t gwa el module bayt7t 3la nafs level asm el module )
+
+
+  # example
+    - hosts: all
+      tasks:
+      - name: Shut down Debian flavored systems
+        command: 'sudo /sbin/shutdown -t now'
+        #command: 'sudo /sbin/reboot'
+        when: ansible_facts['os_family'] == "Debian"
+
+      - name: Shut down RedHat flavored systems
+        command: 'sudo /sbin/shutdown -t now'
+        #command: 'sudo /sbin/reboot'
+        when: ansible_facts['os_family'] == "RedHat"
+
+
+> variables (in playbook)
+-------------------------
+ we can use ansible  predefined variables inside inventory file 
+ or 
+  1st method : 
+  1- decalre variables before tasks 
+  2- use the variable inside modules using "{{variable}}"
+
+  2nd method :
+  lel variables el had5lhm fy run time 
+  
+    # example :
+      vars:
+        - dir_name: test 
+      vars_prompt:
+        - name: password
+          prompt: plz enter ur password?    # msg appear during execute ansible playbbok 
+          private: yes                      # yes: matzhrsh clear text w ana bad5l el password , No :tazhr 3ady 
+
+  3rd method :
+  - write the vars section associated with specific group of clients 
+    
+  # example 
+
+  [webservers:vars]
+  http_port=80/tcp                            # these are module attributes saved as variables 
+  html_page_src=index.html                    
+  html_page_dest=/var/www/html/index.html
+     
+     # where http_port ---> the name of variable ely ana pass lel module attributes 
+                # copy:
+                #   src: "{{ html_page_src }}"
+                #   dest: "{{ html_page_dest }}"
+##################################################################################################################################################################################################################
+
+> Debug 
+--------
+- 3shan ashwf standard o/p bta3 ay module fy ansible during running time "" bn7tag na3ml (register , debug )
+- register --> dh parameter baktbo 3la nafs el identation bta3 el module (msh gwa el module la2no msh tab3 module arguments)
+           --> bya5od mni asm variable (msh m7tag declare variable)(it save std o/p of module in that variable )
+           --> 3shan atb3 el variable dh hast5dm module asmo debug 
+
+- debug ------> module , take only one parameter (var:)
+          ----> (var:variable_name) ----------> by default hwa print o/p fy jason format (time , atrributes kter tanya )
+          ----> (var:variable_name.stdout) ---> print o/p fy shaklo el tabe3e (kda ana ba5leh print stdout attribute bs msh kol jason object )
+
+    # example :
+   - name:
+      command: "ls test"   
+      register: results 
+
+    - name: print stdout
+      debug:
+        var: results.stdout   
+
+
+  
+  - used to print value of variable 
+    - name: Print the value of a variable
+      debug:
+        msg: "The value of my_var is {{ my_var }}"
+
+
+
+
+
+> template 
+------------
+- hwa nafs el copy module bs w hwa by (copy el file + replace variables ely mwgwda gwa el file dh )
+- mw3zm el wa2t baykon feh configuration file w 3ayz a3'yr feh agza2 mw3yna  
+
+- used lw 3ayz a pass configuration file kaml lel client server
+  solution  --> create one configuration file (Preffered to be .j2  el module dh byst5dm language jinja2 )(lw m3mltsh el extension kda hayfhmo bardo )
+            ---> put variables inside file , same method  "{{variable }}"
+            ---> declare this variables in playbook file 
+            
+            #example 
+            - name: copy template
+              template:
+                src: myconfq       # where myconfig is the file in the root of the project 
+                dest: myconfig
+
+# we use src attribute when the src file exist in the Ansible master if the file exist in another server we will use another attribute "remote_ask_src" ta7t el src aw mkan el src
+
+##############################################################################################################################################################333
+> Roles 
+---------
+- Roles are a way to group tasks together into one container. 
+- roles are re-usable bundles of tasks , handler & template 
+- used to re-use tasks & break complex playbook into separate parts 
+- we can publish this roles using ansible galaxy 
+
+
+Role hirearchy :
+  role-name-1/
+          defaults/ ---> main. yml              # bayt7t feh variables ba constant values , m3rafsh 7aga aktr mn kda 
+          files/
+          handlers/ ---> main.yml               # hadef el taskts el ta7t el handlers mn 3'ir ma adef section el handler , w aseb "-" indicate bdayt kol task ta7t el handlers 
+          meta/  ------> main.yml
+          tasks/ ------> main.yml               # haktb el tasks gwa main.yml
+          templates/ -->                        # ban7ot ta7teh el files el 3ayz a3mlha copy fy el client 
+          tests/ ------> inventory , test.yml  
+          vars/ -------> main.yml               # ba3rf feha el variavles 3la twl mn 3'ir ma adef (vars section) , (aw a7ot "-")
+
+# ansible-galaxy init Role-name      ----->  create this hireachy automatic 
+
+Roles inside playbook :
+ - hosts: web
+  remote user: ubuntu                      
+  become: yes
+
+  vars_prompt:
+    - name: password
+      prompt: plz enter ur password
+      private: yes 
+  roles:
+    - web 
+
+
+> ansible galaxy 
+-----------------
+- shabh el dockerhup , feh nas katba ansible roles gahza momken tanzlha 3ndk w tast5dmha 3la twl 
+  # ansible-galaxy install .........      ------>  bta5od el cmd dh copy from ansible Galaxy 
+  # ansible-galaxy init Role-name         ------> create role directory bnafs asm (role name ) , fy nafs el mkan el run feh el command  w gwah el structure kaml 
+
+
+steps :
+--------
+    1 - some prerequests to use ansible galaxy 
+        #  sudo yum install ansible-galaxy
+        #  Sudo yum install git
+
+    2 - Create a roles/requirements.yml file in your Ansible project directory 
+          ---
+        roles:
+          - src: https://github.com/Minaattiia/ntp-ansible-role.git
+            scm: git
+            version: main , master 
+
+    3- Run the following command to download the role before run playbook cmd 
+      # ansible-galaxy install -r roles/requirements.yml
+
+
+# note : the role must contain meta folder which contain (main.yml ) contain metadata of that role 
+
+
+
+#######################################################################################################
+eh hya atlenta ??
+#####
+- matklmnash 3n ba2y el sections el fy el inventory file ?? mwgwda fy el slides 
+###
+1 play consists of many tasks ??
+> hal momken yakon fy aktr mn play kol play ba target group mw3yna aw host mw3yn 
+### 
+ya3ni eh msh bay3ml tracking lel clients ??
+####
+(ok , changed , unreachable , failed , skipped , rescused , ignored ) ?? 
+-  masln lw ana 3aml handler w asht3'l ---> (changed=1) w kda el (ok) hayzed wa7d 
+###
+
+fy msal el handler 
+I need shar7 el msal kolo 
+ # by7slha execute at the end of play (maktwba fy el slides ) ---> ya3ni ansible haykml kol el configuration fy el play w b3dha yas3mlha execute lw 7sl change 
+         wala battnfz awl lma ya7sl change fy nafs mkan el module el feh notify ?? 
+        tarek kan ayli fy nafs mkan el module el feh notify w b3dha takml execute ba2y el modules inside play 
+
+ # fy el msal ely fy el slides el mafrod el notify tab2a ta7t el (module bta3 copy msh yum) tlama lma ya7sl change fy el configuration file el hayt3mlo copy  tasht3'l 
+   wala el configuration file dh 3'ir var/www/html   
+
+###
+lw 3ayzha ta loop 3la task kaml gwah aktr mn module hattkatb fen ??
+
+### 
+el variables ely ba3rfhm fy el inventory file la host mw3yn 
+hal hya predefined variables ?? w ana ba3'ir el value bs 
+w azay bast5dmhm 
+
+###########################################################################################################
+Ansible tower 
+ 

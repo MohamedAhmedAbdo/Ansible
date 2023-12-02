@@ -1,0 +1,11 @@
+---
+# tasks file for apache
+- name: update packages
+  package:
+    update_cache: true
+
+- name: install apache
+  package:
+    name: httpd
+    state: present
+  notify: restart apache

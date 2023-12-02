@@ -1,0 +1,14 @@
+- hosts: london
+  remote_user: root
+  become: yes
+  tasks:
+    - name: get meta data from AWS
+      shell:
+        cmd: curl http://169.254.169.254/latest//meta-data/public-ipv4
+      register: curl # means anything that happens in this block task will be saved here in the variable called curl
+    - debug:
+      var: curl.stdout
+# The IP address 169.254.169.254 is a link-local address that is used by Amazon Web Services (AWS)
+# to provide metadata to EC2 instances running in a Virtual Private Cloud (VPC).
+# This IP address is not reachable from outside of the instance or the VPC
+# Instance metadata such as instance ID, public and private IP addresses, security groups, etc.

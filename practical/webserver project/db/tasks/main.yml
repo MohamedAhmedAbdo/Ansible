@@ -1,0 +1,14 @@
+---
+# tasks file for apache
+- name: install db engine
+  package:
+    name: "{{ db_engine }}"
+    state: present
+
+- name: show db engine version
+  command: "{{ db_engine }} --version"
+  register: db_version
+
+- name: display version
+  debug:
+    var: db_version.stdout_lines

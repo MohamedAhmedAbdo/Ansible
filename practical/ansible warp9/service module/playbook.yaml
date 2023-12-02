@@ -1,0 +1,17 @@
+- hosts: london
+  remote_user: root # remote_user: defines which user the ansible master will use to communicate with remote hosts
+  become: yes
+  tasks:
+    - name: install apache
+      yum:
+        name: httpd
+        state: installed
+    # service module
+    - name: restart apache
+      service:
+        name: httpd
+        state: restarted
+    - name: remove apache
+      yum:
+        name: httpd
+        state: removed
