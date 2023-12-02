@@ -1,0 +1,61 @@
+(su -) ------ change to root using user password
+history 
+rpm -qa httpd    --> quary all (hay2wlk el version la kol installed package  )
+netstat -ltnp
+----------
+-> on master 
+sudo yum install python3
+sudo yum install -y  epel-release
+sudo yum -y  install ansible
+
+--------
+sudo  vim /etc/ansible/hosts
+cat project/inventories/hosts
+
+----------------
+ansible --version
+ansible-playbook apache-playbook.yml -i inventories/hosts
+ansible -m ping webservers --private-key=/etc/ansible/client.pem     --------> masht3'lsh 
+ansible Webserver1 -m ping -k                                        --------> talb password ssh
+
+
+------------------
+ssh -keygen                                                          --------> (on client), genrate (~/.ssh/id_rsa) dh el ban2lo 3la master , seb (id_rsa.pub) 
+/ssh -i /etc/ansible/client.pem client@192.168.23.136                 --------> (on master),(/etc/ansible) contain public key
+
+
+
+--------------------
+(((hosts)))
+
+[webservers]
+Webserver1 ansible_host=192.168.23.136 ansible_user=root ansible_password=123
+
+(((( playbook ))))
+
+- hosts: webservers
+  become: yes
+  tasks:
+  - name: install httpd
+    yum:
+      name: httpd
+      state: installed
+  - name: install firewalld
+    yum:
+      name: firewalld
+      state: installed
+  - name: start and enable httpd
+    systemd:
+      name: httpd
+      state: started
+      enabled: yes
+  - name: permit traffic in default zone for https service
+    firewalld:
+      port: 80/tcp
+      permanent: yes
+      state: enabled
+  - name: reload service firewalld
+    systemd:
+      name: firewalld
+      state: reloaded
+
